@@ -3,6 +3,7 @@
 
 #include <QtWidgets/QMainWindow>
 #include "ui_imageregistration.h"
+#include "Manager.h"
 
 class ImageRegistration : public QMainWindow
 {
@@ -12,6 +13,12 @@ public:
     ImageRegistration(QWidget *parent = 0);
     ~ImageRegistration();
 
+public slots:
+    void updateReferenceImage();
+    void updateTargetImage();
+
+public:
+    Manager* manager;
 private:
     Ui::ImageRegistrationClass ui;
 };
