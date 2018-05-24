@@ -1,14 +1,17 @@
 #include "stdafx.h"
 #include "Registration.h"
-#include "Manager.h"
+#include "RegistrationThread.h"
 #include <iostream>
 #include <cmath>
 
-Registration::Registration(Manager* man, cv::Mat ref, cv::Mat tar, TransformType t, SimilarityType s, OptimizationType o) {
-    manager = man;
-    ref_img = ref;
-    tar_img = tar;
-    trans_img = cv::Mat(tar.rows, tar.cols, tar.type());
+Registration::Registration(RegistrationThread* thr, cv::Mat ref, cv::Mat tar, TransformType t, SimilarityType s, OptimizationType o) {
+    thread = thr;
+    ref_ori_img = ref;
+    tar_ori_img = tar;
+    cv::resize(ref, ref_img, cv::Size(0, 0), 0.1, 0.1);
+    cv::resize(tar, tar_img, cv::Size(0, 0), 0.1, 0.1);
+
+    trans_img = cv::Mat(tar_img.rows, tar_img.cols, tar_img.type());
     transform_type = t;
     transform = cv::Mat(2, 3, CV_32FC1);
     border_value = cv::mean(tar_img); // cv::Scalar(0, 0, 0);
@@ -108,4 +111,5 @@ void Registration::applyTransform() {
 
 void Registration::showCombinedImage() {
     //cv::imshow("", trans_img);
+    thread->showCombinedImage(trans_img.clone());
 }

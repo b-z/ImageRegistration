@@ -1,7 +1,7 @@
 #pragma once
 #include <opencv2\opencv.hpp>
 #include <vector>
-class Manager;
+class RegistrationThread;
 class Registration
 {
 public:
@@ -19,7 +19,7 @@ public:
         OPTIMIZE_NAIVE = 0,
         OPTIMIZE_GA = 1
     };
-    Registration(Manager* man, cv::Mat ref, cv::Mat tar, TransformType t, SimilarityType s, OptimizationType o);
+    Registration(RegistrationThread* thr, cv::Mat ref, cv::Mat tar, TransformType t, SimilarityType s, OptimizationType o);
     ~Registration();
 
     double getSimilarity(cv::Mat img1, cv::Mat img2, SimilarityType s);
@@ -32,6 +32,8 @@ public:
 public:
     int iter;
     double loss;
+    cv::Mat ref_ori_img;
+    cv::Mat tar_ori_img;
     cv::Mat ref_img; // reference image
     cv::Mat tar_img; // target image
     cv::Mat trans_img; // transformed image
@@ -40,7 +42,7 @@ public:
     TransformType transform_type;
     SimilarityType similarity_type;
     OptimizationType optimization_type;
-    Manager* manager;
+    RegistrationThread* thread;
     std::vector<float> params;
     std::vector<float> steps;
     std::vector<std::pair<float, float>> limits;

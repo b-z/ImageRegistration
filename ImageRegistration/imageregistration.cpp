@@ -1,12 +1,14 @@
 #include "stdafx.h"
 #include "imageregistration.h"
 #include <opencv2\opencv.hpp>
+#include "ResultWindow.h"
 
 ImageRegistration::ImageRegistration(QWidget *parent)
     : QMainWindow(parent)
 {
     ui.setupUi(this);
-    manager = new Manager(this);
+    result_window = new ResultWindow(this);
+    manager = new Manager(this, result_window);
     connect(ui.action_open_reference_image, SIGNAL(triggered()), manager, SLOT(loadReferenceImage()));
     connect(ui.action_open_target_image, SIGNAL(triggered()), manager, SLOT(loadTargetImage()));
     connect(ui.action_run, SIGNAL(triggered()), manager, SLOT(runSimpleRegistration()));
@@ -30,7 +32,7 @@ void ImageRegistration::updateReferenceImage() {
         qimg = QImage((const unsigned char *)(img.data), img.cols, img.rows, img.cols * img.channels(), QImage::Format_RGB888);
     }
     if (!img.cols) return;
-    ui.image_r->setFixedSize(512, img.rows * 512 / img.cols);
+    ui.image_r->setFixedSize(IMAGE_WIDTH, img.rows * IMAGE_WIDTH / img.cols);
     ui.image_r->setPixmap(QPixmap::fromImage(qimg));
     adjustSize();
 }
@@ -48,7 +50,7 @@ void ImageRegistration::updateTargetImage() {
         qimg = QImage((const unsigned char *)(img.data), img.cols, img.rows, img.cols * img.channels(), QImage::Format_RGB888);
     }
     if (!img.cols) return;
-    ui.image_t->setFixedSize(512, img.rows * 512 / img.cols);
+    ui.image_t->setFixedSize(IMAGE_WIDTH, img.rows * IMAGE_WIDTH / img.cols);
     ui.image_t->setPixmap(QPixmap::fromImage(qimg));
     adjustSize();
 }

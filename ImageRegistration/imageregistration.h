@@ -5,6 +5,8 @@
 #include "ui_imageregistration.h"
 #include "Manager.h"
 
+class ResultWindow;
+
 class ImageRegistration : public QMainWindow
 {
     Q_OBJECT
@@ -19,6 +21,7 @@ public slots:
 
 public:
     Manager* manager;
+    ResultWindow* result_window;
 private:
     Ui::ImageRegistrationClass ui;
 };
