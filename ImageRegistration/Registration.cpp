@@ -38,21 +38,40 @@ void Registration::runRegistration() {
 void Registration::initialize() {
     loss = 1e30;
     iter = 0;
+    int c = trans_img.cols;
+    int r = trans_img.rows;
     switch (transform_type) {
     case TRANSFORM_TRANSLATE:
-        params.resize(2);
+        params.resize(2); // tx ty
         limits.resize(2);
         steps.resize(2);
-        params[0] = -trans_img.cols;
-        params[1] = -trans_img.rows;
-        limits[0] = std::make_pair(-trans_img.cols, trans_img.cols);
-        limits[1] = std::make_pair(-trans_img.rows, trans_img.rows);
+        limits[0] = std::make_pair(-c, c);
+        limits[1] = std::make_pair(-r, r);
+        for (int i = 0; i < params.size(); i++) {
+            params[i] = limits[i].first;
+        }
         transform.at<float>(0, 0) = 1;
         transform.at<float>(0, 1) = 0;
         transform.at<float>(1, 0) = 0;
         transform.at<float>(1, 1) = 1;
         steps[0] = 1;
         steps[1] = 1;
+        break;
+    case TRANSFORM_ROTATE:
+        params.resize(4); // cx cy angle scale
+        limits.resize(4);
+        steps.resize(4);
+        limits[0] = std::make_pair(0, c);
+        limits[1] = std::make_pair(0, r);
+        limits[2] = std::make_pair(0, 360);
+        limits[3] = std::make_pair(0.5, 2);
+        for (int i = 0; i < params.size(); i++) {
+            params[i] = limits[i].first;
+        }
+        steps[0] = 4;
+        steps[1] = 4;
+        steps[2] = 4;
+        steps[3] = 0.04;
         break;
     }
 }
@@ -104,6 +123,10 @@ void Registration::applyTransform() {
     case TRANSFORM_TRANSLATE:
         transform.at<float>(0, 2) = params[0];
         transform.at<float>(1, 2) = params[1];
+        cv::warpAffine(ref_img, trans_img, transform, trans_img.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, border_value);
+        break;
+    case TRANSFORM_ROTATE:
+        transform = cv::getRotationMatrix2D(cv::Point2f(params[0], params[1]), params[2], params[3]);
         cv::warpAffine(ref_img, trans_img, transform, trans_img.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, border_value);
         break;
     }
