@@ -2,6 +2,7 @@
 #include "Manager.h"
 #include <string>
 #include <opencv2\opencv.hpp>
+#include "Registration.h"
 
 Manager::Manager(QObject *parent)
     : QObject(parent)
@@ -37,5 +38,11 @@ void Manager::loadTargetImage() {
 }
 
 void Manager::runSimpleRegistration() {
-
+    cv::Mat ref;
+    cv::Mat tar;
+    cv::resize(ref_img, ref, cv::Size(0, 0), 0.1, 0.1);
+    cv::resize(tar_img, tar, cv::Size(0, 0), 0.1, 0.1);
+    Registration r(this, ref, tar, Registration::TRANSFORM_TRANSLATE,
+        Registration::SIMILARITY_L2, Registration::OPTIMIZE_NAIVE);
+    r.runRegistration();
 }
