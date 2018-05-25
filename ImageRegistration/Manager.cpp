@@ -40,6 +40,6 @@ void Manager::loadTargetImage() {
 
 void Manager::runRegistration(Registration::TransformType t, Registration::SimilarityType s, Registration::OptimizationType o) {
     RegistrationThread* r = new RegistrationThread(this, ref_img, tar_img, t, s, o);
-    connect(r, SIGNAL(transformedImageReady(QImage)), result_window, SLOT(updateTransformedImage(QImage)));
+    connect(r, SIGNAL(transformedImageReady(cv::Mat*)), result_window, SLOT(updateTransformedImage(cv::Mat*)));
     r->start();
 }

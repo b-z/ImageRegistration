@@ -5,7 +5,7 @@
 #include <QTimer>
 #include "ui_ResultWindow.h"
 #include "Manager.h"
-
+#include <queue>
 
 class ResultWindow : public QDialog
 {
@@ -15,11 +15,12 @@ public:
     ResultWindow(QWidget *parent = 0);
     ~ResultWindow();
 public slots:
-    void updateTransformedImage(QImage qimg);
+    void updateTransformedImage(cv::Mat* img);
     void updateTargetImage(QImage qimg);
     void updateCompareImage();
 
 public:
+    cv::Mat* p_img;
     QImage trans_qimg;
     QImage tar_qimg;
     QTimer timer;

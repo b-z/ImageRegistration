@@ -8,10 +8,11 @@ Registration::Registration(RegistrationThread* thr, cv::Mat ref, cv::Mat tar, Tr
     thread = thr;
     ref_ori_img = ref;
     tar_ori_img = tar;
-    cv::resize(ref, ref_img, cv::Size(0, 0), 0.1, 0.1);
-    cv::resize(tar, tar_img, cv::Size(0, 0), 0.1, 0.1);
+    cv::resize(ref, ref_img, cv::Size(0, 0), SCALE, SCALE);
+    cv::resize(tar, tar_img, cv::Size(0, 0), SCALE, SCALE);
 
     trans_img = cv::Mat(tar_img.rows, tar_img.cols, tar_img.type());
+    trans_ori_img = cv::Mat(tar_ori_img.rows, tar_ori_img.cols, tar_ori_img.type());
     transform_type = t;
     transform = cv::Mat(2, 3, CV_32FC1);
     border_value = cv::mean(tar_img); // cv::Scalar(0, 0, 0);
@@ -122,25 +123,32 @@ double Registration::getSimilarity(cv::Mat img1, cv::Mat img2, SimilarityType s)
     return similarity;
 }
 
-void Registration::applyTransform() {
+void Registration::applyTransform(bool original_image) {
     switch (transform_type) {
     case TRANSFORM_TRANSLATE:
         transform.at<float>(0, 2) = params[0];
         transform.at<float>(1, 2) = params[1];
-        cv::warpAffine(ref_img, trans_img, transform, trans_img.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, border_value);
         break;
     case TRANSFORM_ROTATE:
         transform = cv::getRotationMatrix2D(cv::Point2f(0, 0), params[2], params[3]);
         transform.at<float>(0, 2) = params[0];
         transform.at<float>(1, 2) = params[1];
-        cv::warpAffine(ref_img, trans_img, transform, trans_img.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, border_value);
         break;
+    }
+    if (original_image) {
+        cv::Mat t = transform.clone();
+        t.at<float>(0, 2) /= SCALE;
+        t.at<float>(1, 2) /= SCALE;
+        cv::warpAffine(ref_ori_img, trans_ori_img, t, trans_ori_img.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, border_value);
+    } else {
+        cv::warpAffine(ref_img, trans_img, transform, trans_img.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, border_value);
     }
 }
 
 void Registration::showTransformedImage() {
+    applyTransform(true);
     cv::Mat* img = new cv::Mat;
-    *img = trans_img.clone();
+    *img = trans_ori_img.clone();
     thread->showTransformedImage(img);
-    //Sleep(100);
+    Sleep(50);
 }

@@ -9,6 +9,7 @@ ResultWindow::ResultWindow(QWidget *parent)
     timer.setInterval(1000);
     timer.start();
     show_trans_img = false;
+    p_img = NULL;
 }
 
 ResultWindow::~ResultWindow()
@@ -20,11 +21,19 @@ void ResultWindow::updateTargetImage(QImage qimg) {
     tar_qimg = qimg;
 }
 
-void ResultWindow::updateTransformedImage(QImage qimg) {
+void ResultWindow::updateTransformedImage(cv::Mat* img) {
     show();
-    trans_qimg = qimg;
-    ui.image->setPixmap(QPixmap::fromImage(qimg));
-    ui.image->setFixedSize(IMAGE_WIDTH, qimg.height() * IMAGE_WIDTH / qimg.width());
+    delete p_img;
+    p_img = img;
+    if (img->channels() == 3) {
+        trans_qimg = QImage((const unsigned char *)(img->data), img->cols, img->rows, img->cols * img->channels(), QImage::Format_RGB888);
+    } else if (img->channels() == 1) {
+        trans_qimg = QImage((const unsigned char *)(img->data), img->cols, img->rows, img->cols * img->channels(), QImage::Format_ARGB32);
+    } else {
+        trans_qimg = QImage((const unsigned char *)(img->data), img->cols, img->rows, img->cols * img->channels(), QImage::Format_RGB888);
+    }
+    ui.image->setPixmap(QPixmap::fromImage(trans_qimg));
+    ui.image->setFixedSize(IMAGE_WIDTH, trans_qimg.height() * IMAGE_WIDTH / trans_qimg.width());
     adjustSize();
 }
 

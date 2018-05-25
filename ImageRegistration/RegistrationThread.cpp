@@ -18,19 +18,9 @@ void RegistrationThread::run() {
 }
 
 void RegistrationThread::showTransformedImage(cv::Mat* img) {
-    delete p_img;
-    p_img = img;
-    QImage qimg;
-    if (img->channels() == 3) {
-        qimg = QImage((const unsigned char *)(img->data), img->cols, img->rows, img->cols * img->channels(), QImage::Format_RGB888);
-    } else if (img->channels() == 1) {
-        qimg = QImage((const unsigned char *)(img->data), img->cols, img->rows, img->cols * img->channels(), QImage::Format_ARGB32);
-    } else {
-        qimg = QImage((const unsigned char *)(img->data), img->cols, img->rows, img->cols * img->channels(), QImage::Format_RGB888);
-    }
     if (!img->cols) {
         return;
     }
-    emit transformedImageReady(qimg);
+    emit transformedImageReady(img);
 }
 

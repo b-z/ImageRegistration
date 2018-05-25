@@ -17,7 +17,7 @@ public:
     Registration* r;
     cv::Mat* p_img;
 signals:
-    void transformedImageReady(QImage);
+    void transformedImageReady(cv::Mat*);
 
 private:
     

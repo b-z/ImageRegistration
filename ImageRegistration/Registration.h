@@ -1,6 +1,8 @@
 #pragma once
 #include <opencv2\opencv.hpp>
 #include <vector>
+#define SCALE 0.1
+
 class RegistrationThread;
 class Registration
 {
@@ -24,7 +26,7 @@ public:
     ~Registration();
 
     double getSimilarity(cv::Mat img1, cv::Mat img2, SimilarityType s);
-    void applyTransform();
+    void applyTransform(bool original_image = false);
     void showTransformedImage();
     void runRegistration();
     void initialize();
