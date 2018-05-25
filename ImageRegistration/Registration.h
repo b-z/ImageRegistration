@@ -20,7 +20,8 @@ public:
     };
     enum OptimizationType {
         OPTIMIZE_NAIVE = 0,
-        OPTIMIZE_GA = 1
+        OPTIMIZE_GD = 1,
+        OPTIMIZE_GA = 2
     };
     Registration(RegistrationThread* thr, cv::Mat ref, cv::Mat tar, TransformType t, SimilarityType s, OptimizationType o);
     ~Registration();
@@ -30,8 +31,11 @@ public:
     void showTransformedImage();
     void runRegistration();
     void initialize();
+    void completeIteration();
     void optimizeNaive();
     void optimizeNaiveHelper(int pos);
+    void optimizeGD();
+    void optimizeGDHelper(std::vector<float>& best, double& cur_loss);
 public:
     int iter;
     double loss;

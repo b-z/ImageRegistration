@@ -4,6 +4,10 @@
 #include <iostream>
 #include <cmath>
 
+double random(double LO, double HI) {
+    return LO + static_cast <float> (rand()) / (static_cast <float> (RAND_MAX / (HI - LO)));
+}
+
 Registration::Registration(RegistrationThread* thr, cv::Mat ref, cv::Mat tar, TransformType t, SimilarityType s, OptimizationType o) {
     thread = thr;
     ref_ori_img = ref;
@@ -31,6 +35,9 @@ void Registration::runRegistration() {
     switch (optimization_type) {
     case OPTIMIZE_NAIVE:
         optimizeNaive();
+        break;
+    case OPTIMIZE_GD:
+        optimizeGD();
         break;
     }
     std::cout << "finished!" << std::endl;
@@ -74,7 +81,43 @@ void Registration::initialize() {
         steps[2] = 4;
         steps[3] = 0.04;
         break;
+    case TRANSFORM_AFFINE:
+        params.resize(6);
+        limits.resize(6);
+        steps.resize(6);
+        limits[0] = std::make_pair(0, 30);// -c / 2, c / 2);
+        limits[1] = std::make_pair(-30, 0); // -r / 2, r / 2); // top left
+        limits[2] = std::make_pair(140, 160);// c / 2, c * 3 / 2);
+        limits[3] = std::make_pair(0, 30);// -r / 2, r / 2); // top right
+        limits[4] = std::make_pair(-30, 0);// -c / 2, c / 2);
+        limits[5] = std::make_pair(70, 90);// r / 2, r * 3 / 2); // bottom left
+
+        for (int i = 0; i < params.size(); i++) {
+            params[i] = limits[i].first;
+        }
+        for (int i = 0; i < params.size(); i++) {
+            steps[i] = 1;
+        }
+        break;
     }
+}
+
+void Registration::completeIteration() {
+    // one iteration
+    applyTransform();
+    double s = getSimilarity(trans_img, tar_img, similarity_type);
+    if (s < loss) {
+        loss = s;
+        showTransformedImage();
+        std::cout << "iter: " << iter
+            << "\tloss: " << loss;
+        for (auto & p : params) std::cout << "\t" << p;
+        std::cout << std::endl;
+    }
+    if (loss == s || iter % 1000 == 0) {
+        thread->addDataPoint(iter, s, loss);
+    }
+    iter++;
 }
 
 void Registration::optimizeNaive() {
@@ -83,21 +126,7 @@ void Registration::optimizeNaive() {
 
 void Registration::optimizeNaiveHelper(int pos) {
     if (pos >= params.size()) {
-        // one iteration
-        applyTransform();
-        double s = getSimilarity(trans_img, tar_img, SIMILARITY_L2);
-        if (s < loss) {
-            loss = s;
-            showTransformedImage();
-            std::cout << "iter: " << iter
-                << "\tloss: " << loss;
-            for (auto & p : params)std::cout << "\t" << p;
-            std::cout << std::endl;
-        }
-        if (loss == s || iter % 1000 == 0) {
-            thread->addDataPoint(iter, s, loss);
-        }
-        iter++;
+        completeIteration();
         return;
     }
     for (float i = limits[pos].first; i <= limits[pos].second; i += steps[pos]) {
@@ -105,6 +134,46 @@ void Registration::optimizeNaiveHelper(int pos) {
         optimizeNaiveHelper(pos + 1);
     }
 }
+
+void Registration::optimizeGD() {
+    //std::vector<float> global_best = params;
+    for (int i = 0; i < 10000; i++) {
+        double tmp_loss = 1e30;
+        double cur_loss = 1e30;
+
+        for (int i = 0; i < params.size(); i++) {
+            // give random start values
+            params[i] = random(limits[i].first, limits[i].second);
+        }
+
+        while (true) {
+            std::vector<float> old = params;
+            std::vector<float> best = params;
+            for (int pos = 0; pos < params.size(); pos++) {
+                params[pos] = old[pos] + steps[pos];
+                optimizeGDHelper(best, cur_loss);
+                params[pos] = old[pos] - steps[pos];
+                optimizeGDHelper(best, cur_loss);
+                params[pos] = old[pos];
+            }
+            //optimizeGDHelper(old, best, cur_loss, 0);
+            if (tmp_loss == cur_loss) break;
+            tmp_loss = cur_loss;
+            params = best;
+            completeIteration();
+        }
+    }
+}
+
+void Registration::optimizeGDHelper(std::vector<float>& best, double& cur_loss) {
+    applyTransform();
+    double s = getSimilarity(trans_img, tar_img, similarity_type);
+    if (s < cur_loss) {
+        cur_loss = s;
+        best = params;
+    }
+}
+
 
 double Registration::getSimilarity(cv::Mat img1, cv::Mat img2, SimilarityType s) {
     double similarity = 0;
@@ -137,6 +206,13 @@ void Registration::applyTransform(bool original_image) {
         transform.at<float>(0, 2) = params[0];
         transform.at<float>(1, 2) = params[1];
         break;
+    case TRANSFORM_AFFINE:
+        cv::Point2f src[3] = { cv::Point2f(0, 0), cv::Point2f(tar_img.cols, 0), cv::Point2f(0, tar_img.rows) };
+        cv::Point2f dst[3];
+        for (int i = 0; i < 6; i += 2) dst[i / 2] = cv::Point2f(params[i], params[i + 1]);
+        transform = cv::getAffineTransform(src, dst);
+        //std::cout << transform.at<float>(0, 2) << std::endl;
+        break;
     }
     if (original_image) {
         cv::Mat t = transform.clone();
@@ -149,6 +225,11 @@ void Registration::applyTransform(bool original_image) {
 }
 
 void Registration::showTransformedImage() {
+    //applyTransform();
+    //cv::Mat* img = new cv::Mat;
+    //*img = trans_img.clone();
+    //thread->showTransformedImage(img);
+    //Sleep(50);
     applyTransform(true);
     cv::Mat* img = new cv::Mat;
     *img = trans_ori_img.clone();

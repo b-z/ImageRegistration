@@ -48,6 +48,7 @@ public:
     QGroupBox *groupBox_3;
     QVBoxLayout *verticalLayout_7;
     QRadioButton *radio_naive;
+    QRadioButton *radio_gd;
     QRadioButton *radio_ga;
     QVBoxLayout *verticalLayout_8;
     QPushButton *button_ref_img;
@@ -68,7 +69,7 @@ public:
     {
         if (ImageRegistrationClass->objectName().isEmpty())
             ImageRegistrationClass->setObjectName(QStringLiteral("ImageRegistrationClass"));
-        ImageRegistrationClass->resize(1052, 555);
+        ImageRegistrationClass->resize(1056, 555);
         QSizePolicy sizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
         sizePolicy.setHorizontalStretch(0);
         sizePolicy.setVerticalStretch(0);
@@ -94,7 +95,7 @@ public:
         sizePolicy1.setVerticalStretch(0);
         sizePolicy1.setHeightForWidth(groupBox->sizePolicy().hasHeightForWidth());
         groupBox->setSizePolicy(sizePolicy1);
-        groupBox->setMinimumSize(QSize(140, 0));
+        groupBox->setMinimumSize(QSize(150, 0));
         groupBox->setStyleSheet(QStringLiteral(""));
         groupBox->setFlat(false);
         verticalLayout_5 = new QVBoxLayout(groupBox);
@@ -133,7 +134,7 @@ public:
         groupBox_2->setObjectName(QStringLiteral("groupBox_2"));
         sizePolicy1.setHeightForWidth(groupBox_2->sizePolicy().hasHeightForWidth());
         groupBox_2->setSizePolicy(sizePolicy1);
-        groupBox_2->setMinimumSize(QSize(140, 0));
+        groupBox_2->setMinimumSize(QSize(150, 0));
         groupBox_2->setStyleSheet(QStringLiteral(""));
         groupBox_2->setFlat(false);
         verticalLayout_6 = new QVBoxLayout(groupBox_2);
@@ -166,7 +167,7 @@ public:
         groupBox_3->setObjectName(QStringLiteral("groupBox_3"));
         sizePolicy1.setHeightForWidth(groupBox_3->sizePolicy().hasHeightForWidth());
         groupBox_3->setSizePolicy(sizePolicy1);
-        groupBox_3->setMinimumSize(QSize(140, 0));
+        groupBox_3->setMinimumSize(QSize(150, 0));
         groupBox_3->setStyleSheet(QStringLiteral(""));
         groupBox_3->setFlat(false);
         verticalLayout_7 = new QVBoxLayout(groupBox_3);
@@ -180,15 +181,17 @@ public:
 
         verticalLayout_7->addWidget(radio_naive);
 
+        radio_gd = new QRadioButton(groupBox_3);
+        radio_gd->setObjectName(QStringLiteral("radio_gd"));
+
+        verticalLayout_7->addWidget(radio_gd);
+
         radio_ga = new QRadioButton(groupBox_3);
         radio_ga->setObjectName(QStringLiteral("radio_ga"));
         radio_ga->setMinimumSize(QSize(0, 24));
 
         verticalLayout_7->addWidget(radio_ga);
 
-        radio_naive->raise();
-        radio_naive->raise();
-        radio_ga->raise();
 
         horizontalLayout_2->addWidget(groupBox_3);
 
@@ -293,7 +296,6 @@ public:
         verticalLayout_4->addLayout(verticalLayout_3);
 
         ImageRegistrationClass->setCentralWidget(centralWidget);
-        label_2->raise();
         statusBar = new QStatusBar(ImageRegistrationClass);
         statusBar->setObjectName(QStringLiteral("statusBar"));
         ImageRegistrationClass->setStatusBar(statusBar);
@@ -317,7 +319,8 @@ public:
         radio_linf->setText(QApplication::translate("ImageRegistrationClass", "L\342\210\236", nullptr));
         groupBox_3->setTitle(QApplication::translate("ImageRegistrationClass", "Optimization Method", nullptr));
         radio_naive->setText(QApplication::translate("ImageRegistrationClass", "Brute Force", nullptr));
-        radio_ga->setText(QApplication::translate("ImageRegistrationClass", "GA", nullptr));
+        radio_gd->setText(QApplication::translate("ImageRegistrationClass", "Gradient Descent", nullptr));
+        radio_ga->setText(QApplication::translate("ImageRegistrationClass", "Genetic Algorithm", nullptr));
         button_ref_img->setText(QApplication::translate("ImageRegistrationClass", "Reference Image", nullptr));
         button_tar_img->setText(QApplication::translate("ImageRegistrationClass", "Target Image", nullptr));
         button_run->setText(QApplication::translate("ImageRegistrationClass", "Run Registration", nullptr));

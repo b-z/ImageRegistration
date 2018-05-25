@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1052</width>
+    <width>1056</width>
     <height>555</height>
    </rect>
   </property>
@@ -38,7 +38,7 @@
           </property>
           <property name="minimumSize">
            <size>
-            <width>140</width>
+            <width>150</width>
             <height>0</height>
            </size>
           </property>
@@ -120,7 +120,7 @@
           </property>
           <property name="minimumSize">
            <size>
-            <width>140</width>
+            <width>150</width>
             <height>0</height>
            </size>
           </property>
@@ -189,7 +189,7 @@
           </property>
           <property name="minimumSize">
            <size>
-            <width>140</width>
+            <width>150</width>
             <height>0</height>
            </size>
           </property>
@@ -220,6 +220,13 @@
             </widget>
            </item>
            <item>
+            <widget class="QRadioButton" name="radio_gd">
+             <property name="text">
+              <string>Gradient Descent</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QRadioButton" name="radio_ga">
              <property name="minimumSize">
               <size>
@@ -228,14 +235,11 @@
               </size>
              </property>
              <property name="text">
-              <string>GA</string>
+              <string>Genetic Algorithm</string>
              </property>
             </widget>
            </item>
           </layout>
-          <zorder>radio_naive</zorder>
-          <zorder>radio_naive</zorder>
-          <zorder>radio_ga</zorder>
          </widget>
         </item>
         <item>
@@ -415,8 +419,6 @@
      </layout>
     </item>
    </layout>
-   <zorder>label_2</zorder>
-   <zorder>verticalLayoutWidget</zorder>
   </widget>
   <widget class="QStatusBar" name="statusBar"/>
  </widget>
