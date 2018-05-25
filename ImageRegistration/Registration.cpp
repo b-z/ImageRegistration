@@ -94,6 +94,9 @@ void Registration::optimizeNaiveHelper(int pos) {
             for (auto & p : params)std::cout << "\t" << p;
             std::cout << std::endl;
         }
+        if (loss == s || iter % 1000 == 0) {
+            thread->addDataPoint(iter, s, loss);
+        }
         iter++;
         return;
     }

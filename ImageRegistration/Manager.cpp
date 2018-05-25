@@ -41,5 +41,6 @@ void Manager::loadTargetImage() {
 void Manager::runRegistration(Registration::TransformType t, Registration::SimilarityType s, Registration::OptimizationType o) {
     RegistrationThread* r = new RegistrationThread(this, ref_img, tar_img, t, s, o);
     connect(r, SIGNAL(transformedImageReady(cv::Mat*)), result_window, SLOT(updateTransformedImage(cv::Mat*)));
+    connect(r, SIGNAL(newDataPoint(int, double, double)), result_window, SLOT(addDataPoint(int, double, double)));
     r->start();
 }

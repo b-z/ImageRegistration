@@ -13,12 +13,13 @@ public:
     ~RegistrationThread();
     void run() override;
     void showTransformedImage(cv::Mat* img);
+    void addDataPoint(int iter, double loss, double min_loss);
 public:
     Registration* r;
     cv::Mat* p_img;
 signals:
     void transformedImageReady(cv::Mat*);
-
+    void newDataPoint(int iter, double loss, double min_loss);
 private:
     
 };

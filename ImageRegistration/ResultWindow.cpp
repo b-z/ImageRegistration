@@ -5,16 +5,42 @@ ResultWindow::ResultWindow(QWidget *parent)
     : QDialog(parent)
 {
     ui.setupUi(this);
-    connect(&timer, SIGNAL(timeout()), this, SLOT(updateCompareImage()));
-    timer.setInterval(1000);
-    timer.start();
-    show_trans_img = false;
     p_img = NULL;
+    chart = NULL;
+    series1 = NULL;
+    series2 = NULL;
+    timer = NULL;
+    chart_view = new QChartView();
+    ui.verticalLayout_2->addWidget(chart_view);
+    chart_view->setRenderHint(QPainter::Antialiasing);
+    init();
 }
 
 ResultWindow::~ResultWindow()
 {
+    delete p_img;
+}
 
+void ResultWindow::init() {
+    delete timer;
+    timer = new QTimer();
+    connect(timer, SIGNAL(timeout()), this, SLOT(updateCompareImage()));
+    timer->setInterval(1000);
+    timer->start();
+    show_trans_img = false;
+    delete p_img;
+    delete chart;
+    delete series1;
+    delete series2;
+    chart = new QChart();
+    series1 = new QLineSeries(chart);
+    series2 = new QLineSeries(chart);
+    chart->addSeries(series1);
+    chart->addSeries(series2);
+    chart->createDefaultAxes();
+    chart_view->setChart(chart);
+    point_count = 0;
+    max_loss = 0;
 }
 
 void ResultWindow::updateTargetImage(QImage qimg) {
@@ -22,7 +48,6 @@ void ResultWindow::updateTargetImage(QImage qimg) {
 }
 
 void ResultWindow::updateTransformedImage(cv::Mat* img) {
-    show();
     delete p_img;
     p_img = img;
     if (img->channels() == 3) {
@@ -49,4 +74,16 @@ void ResultWindow::updateCompareImage() {
         show_trans_img = !show_trans_img;
         adjustSize();
     }
+}
+
+void ResultWindow::addDataPoint(int iter, double loss, double min_loss) {
+    series1->append(QPointF(iter, loss));
+    series2->append(QPointF(iter, min_loss));
+    if (series1->count() > 100) {
+        series1->removePoints(0, 1);
+        series2->removePoints(0, 1);
+    }
+    max_loss = MAX(max_loss, loss);
+    chart->axisX()->setRange(series1->at(0).x(), iter);
+    chart->axisY()->setRange(0, max_loss);
 }

@@ -58,6 +58,8 @@ void ImageRegistration::updateTargetImage() {
 }
 
 void ImageRegistration::runRegistration() {
+    result_window->init();
+    result_window->show();
     Registration::TransformType t = Registration::TransformType::TRANSFORM_TRANSLATE;
     if (ui.radio_rotate->isChecked()) t = Registration::TransformType::TRANSFORM_ROTATE;
     if (ui.radio_affine->isChecked()) t = Registration::TransformType::TRANSFORM_AFFINE;

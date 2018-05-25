@@ -24,3 +24,6 @@ void RegistrationThread::showTransformedImage(cv::Mat* img) {
     emit transformedImageReady(img);
 }
 
+void RegistrationThread::addDataPoint(int iter, double loss, double min_loss) {
+    emit newDataPoint(iter, loss, min_loss);
+}

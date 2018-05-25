@@ -28,12 +28,14 @@ public:
     QHBoxLayout *horizontalLayout;
     QLabel *image;
     QLabel *image_cmp;
+    QWidget *verticalWidget;
+    QVBoxLayout *verticalLayout_2;
 
     void setupUi(QWidget *ResultWindow)
     {
         if (ResultWindow->objectName().isEmpty())
             ResultWindow->setObjectName(QStringLiteral("ResultWindow"));
-        ResultWindow->resize(770, 418);
+        ResultWindow->resize(1568, 439);
         verticalLayout = new QVBoxLayout(ResultWindow);
         verticalLayout->setSpacing(6);
         verticalLayout->setContentsMargins(11, 11, 11, 11);
@@ -43,15 +45,28 @@ public:
         horizontalLayout->setObjectName(QStringLiteral("horizontalLayout"));
         image = new QLabel(ResultWindow);
         image->setObjectName(QStringLiteral("image"));
+        image->setMinimumSize(QSize(512, 0));
         image->setScaledContents(true);
 
         horizontalLayout->addWidget(image);
 
         image_cmp = new QLabel(ResultWindow);
         image_cmp->setObjectName(QStringLiteral("image_cmp"));
+        image_cmp->setMinimumSize(QSize(512, 0));
         image_cmp->setScaledContents(true);
 
         horizontalLayout->addWidget(image_cmp);
+
+        verticalWidget = new QWidget(ResultWindow);
+        verticalWidget->setObjectName(QStringLiteral("verticalWidget"));
+        verticalWidget->setMinimumSize(QSize(512, 0));
+        verticalLayout_2 = new QVBoxLayout(verticalWidget);
+        verticalLayout_2->setSpacing(6);
+        verticalLayout_2->setContentsMargins(11, 11, 11, 11);
+        verticalLayout_2->setObjectName(QStringLiteral("verticalLayout_2"));
+        verticalLayout_2->setContentsMargins(0, 0, 0, 0);
+
+        horizontalLayout->addWidget(verticalWidget);
 
 
         verticalLayout->addLayout(horizontalLayout);
