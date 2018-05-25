@@ -38,10 +38,8 @@ void Manager::loadTargetImage() {
     emit targetImageReady();
 }
 
-void Manager::runSimpleRegistration() {
-    RegistrationThread* r = new RegistrationThread(this, ref_img, tar_img, Registration::TRANSFORM_ROTATE,
-        Registration::SIMILARITY_L2, Registration::OPTIMIZE_NAIVE);
-    // r.runRegistration();
-    connect(r, SIGNAL(combinedImageReady(QImage)), result_window, SLOT(updateCombinedImage(QImage)));
+void Manager::runRegistration(Registration::TransformType t, Registration::SimilarityType s, Registration::OptimizationType o) {
+    RegistrationThread* r = new RegistrationThread(this, ref_img, tar_img, t, s, o);
+    connect(r, SIGNAL(transformedImageReady(QImage)), result_window, SLOT(updateTransformedImage(QImage)));
     r->start();
 }

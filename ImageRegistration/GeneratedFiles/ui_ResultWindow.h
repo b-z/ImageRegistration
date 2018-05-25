@@ -27,12 +27,13 @@ public:
     QVBoxLayout *verticalLayout;
     QHBoxLayout *horizontalLayout;
     QLabel *image;
+    QLabel *image_cmp;
 
     void setupUi(QWidget *ResultWindow)
     {
         if (ResultWindow->objectName().isEmpty())
             ResultWindow->setObjectName(QStringLiteral("ResultWindow"));
-        ResultWindow->resize(400, 300);
+        ResultWindow->resize(770, 418);
         verticalLayout = new QVBoxLayout(ResultWindow);
         verticalLayout->setSpacing(6);
         verticalLayout->setContentsMargins(11, 11, 11, 11);
@@ -45,6 +46,12 @@ public:
         image->setScaledContents(true);
 
         horizontalLayout->addWidget(image);
+
+        image_cmp = new QLabel(ResultWindow);
+        image_cmp->setObjectName(QStringLiteral("image_cmp"));
+        image_cmp->setScaledContents(true);
+
+        horizontalLayout->addWidget(image_cmp);
 
 
         verticalLayout->addLayout(horizontalLayout);
@@ -59,6 +66,7 @@ public:
     {
         ResultWindow->setWindowTitle(QApplication::translate("ResultWindow", "ResultWindow", nullptr));
         image->setText(QString());
+        image_cmp->setText(QString());
     } // retranslateUi
 
 };

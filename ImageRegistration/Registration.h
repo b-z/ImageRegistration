@@ -13,7 +13,8 @@ public:
     };
     enum SimilarityType {
         SIMILARITY_L1 = 0,
-        SIMILARITY_L2 = 1
+        SIMILARITY_L2 = 1,
+        SIMILARITY_LINF = 2
     };
     enum OptimizationType {
         OPTIMIZE_NAIVE = 0,
@@ -24,7 +25,7 @@ public:
 
     double getSimilarity(cv::Mat img1, cv::Mat img2, SimilarityType s);
     void applyTransform();
-    void showCombinedImage();
+    void showTransformedImage();
     void runRegistration();
     void initialize();
     void optimizeNaive();
@@ -34,6 +35,7 @@ public:
     double loss;
     cv::Mat ref_ori_img;
     cv::Mat tar_ori_img;
+    cv::Mat trans_ori_img;
     cv::Mat ref_img; // reference image
     cv::Mat tar_img; // target image
     cv::Mat trans_img; // transformed image

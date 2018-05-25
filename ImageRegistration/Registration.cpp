@@ -45,8 +45,8 @@ void Registration::initialize() {
         params.resize(2); // tx ty
         limits.resize(2);
         steps.resize(2);
-        limits[0] = std::make_pair(-c, c);
-        limits[1] = std::make_pair(-r, r);
+        limits[0] = std::make_pair(-c / 2, c / 2);
+        limits[1] = std::make_pair(-r / 2, r / 2);
         for (int i = 0; i < params.size(); i++) {
             params[i] = limits[i].first;
         }
@@ -61,9 +61,9 @@ void Registration::initialize() {
         params.resize(4); // cx cy angle scale
         limits.resize(4);
         steps.resize(4);
-        limits[0] = std::make_pair(0, c);
-        limits[1] = std::make_pair(0, r);
-        limits[2] = std::make_pair(0, 360);
+        limits[0] = std::make_pair(-c / 2, c / 2);
+        limits[1] = std::make_pair(-r / 2, r / 2);
+        limits[2] = std::make_pair(-180, 180);
         limits[3] = std::make_pair(0.5, 2);
         for (int i = 0; i < params.size(); i++) {
             params[i] = limits[i].first;
@@ -87,7 +87,7 @@ void Registration::optimizeNaiveHelper(int pos) {
         double s = getSimilarity(trans_img, tar_img, SIMILARITY_L2);
         if (s < loss) {
             loss = s;
-            showCombinedImage();
+            showTransformedImage();
             std::cout << "iter: " << iter
                 << "\tloss: " << loss;
             for (auto & p : params)std::cout << "\t" << p;
@@ -107,11 +107,15 @@ double Registration::getSimilarity(cv::Mat img1, cv::Mat img2, SimilarityType s)
     double npixel = img1.rows * img1.cols;
     switch (s) {
     case SIMILARITY_L1:
-        similarity = cv::norm(img1, img2, CV_L1);
+        similarity = cv::norm(img1, img2, cv::NORM_L1);
         similarity /= npixel;
         break;
     case SIMILARITY_L2:
-        similarity = cv::norm(img1, img2, CV_L2);
+        similarity = cv::norm(img1, img2, cv::NORM_L2);
+        similarity /= npixel;
+        break;
+    case SIMILARITY_LINF:
+        similarity = cv::norm(img1, img2, cv::NORM_INF);
         similarity /= npixel;
         break;
     }
@@ -126,13 +130,17 @@ void Registration::applyTransform() {
         cv::warpAffine(ref_img, trans_img, transform, trans_img.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, border_value);
         break;
     case TRANSFORM_ROTATE:
-        transform = cv::getRotationMatrix2D(cv::Point2f(params[0], params[1]), params[2], params[3]);
+        transform = cv::getRotationMatrix2D(cv::Point2f(0, 0), params[2], params[3]);
+        transform.at<float>(0, 2) = params[0];
+        transform.at<float>(1, 2) = params[1];
         cv::warpAffine(ref_img, trans_img, transform, trans_img.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, border_value);
         break;
     }
 }
 
-void Registration::showCombinedImage() {
-    //cv::imshow("", trans_img);
-    thread->showCombinedImage(trans_img.clone());
+void Registration::showTransformedImage() {
+    cv::Mat* img = new cv::Mat;
+    *img = trans_img.clone();
+    thread->showTransformedImage(img);
+    //Sleep(100);
 }

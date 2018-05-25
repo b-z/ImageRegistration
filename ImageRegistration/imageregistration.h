@@ -18,6 +18,7 @@ public:
 public slots:
     void updateReferenceImage();
     void updateTargetImage();
+    void runRegistration();
 
 public:
     Manager* manager;
