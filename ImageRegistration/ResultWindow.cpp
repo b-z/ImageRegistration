@@ -35,6 +35,8 @@ void ResultWindow::init() {
     chart = new QChart();
     series1 = new QLineSeries(chart);
     series2 = new QLineSeries(chart);
+    series1->setName("Current Loss");
+    series2->setName("Minimum Loss");
     chart->addSeries(series1);
     chart->addSeries(series2);
     chart->createDefaultAxes();
@@ -79,11 +81,14 @@ void ResultWindow::updateCompareImage() {
 void ResultWindow::addDataPoint(int iter, double loss, double min_loss) {
     series1->append(QPointF(iter, loss));
     series2->append(QPointF(iter, min_loss));
-    if (series1->count() > 100) {
-        series1->removePoints(0, 1);
-        series2->removePoints(0, 1);
+    for (int i = 1; i < series1->count(); i++) {
+        if (series1->at(i).x() >= iter - 2500) {
+            series1->removePoints(0, i - 1);
+            series2->removePoints(0, i - 1);
+            break;
+        }
     }
     max_loss = MAX(max_loss, loss);
-    chart->axisX()->setRange(series1->at(0).x(), iter);
+    chart->axisX()->setRange(iter - 2500, iter);
     chart->axisY()->setRange(0, max_loss);
 }

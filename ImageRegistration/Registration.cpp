@@ -20,6 +20,7 @@ Registration::Registration(RegistrationThread* thr, cv::Mat ref, cv::Mat tar, Tr
     trans_ori_img = cv::Mat(tar_ori_img.rows, tar_ori_img.cols, tar_ori_img.type());
     transform_type = t;
     transform = cv::Mat(2, 3, CV_32FC1);
+    transform_ = cv::Mat(2, 3, CV_32FC1);
     border_value = cv::mean(tar_img); // cv::Scalar(0, 0, 0);
     similarity_type = s;
     optimization_type = o;
@@ -63,6 +64,10 @@ void Registration::initialize() {
         transform.at<float>(0, 1) = 0;
         transform.at<float>(1, 0) = 0;
         transform.at<float>(1, 1) = 1;
+        transform_.at<float>(0, 0) = 1;
+        transform_.at<float>(0, 1) = 0;
+        transform_.at<float>(1, 0) = 0;
+        transform_.at<float>(1, 1) = 1;
         steps[0] = 1;
         steps[1] = 1;
         break;
@@ -123,7 +128,7 @@ void Registration::initialize() {
     }
 }
 
-void Registration::completeIteration() {
+void Registration::completeIteration(bool update) {
     // one iteration
     applyTransform();
     double s = getSimilarity(trans_img, tar_img, similarity_type);
@@ -135,7 +140,7 @@ void Registration::completeIteration() {
         for (auto & p : params) std::cout << "\t" << p;
         std::cout << std::endl;
     }
-    if (loss == s || iter % 1000 == 0) {
+    if (loss == s || update) {
         thread->addDataPoint(iter, s, loss);
     }
     iter++;
@@ -147,7 +152,7 @@ void Registration::optimizeNaive() {
 
 void Registration::optimizeNaiveHelper(int pos) {
     if (pos >= params.size()) {
-        completeIteration();
+        completeIteration(iter % 1000 == 0);
         return;
     }
     for (float i = limits[pos].first; i <= limits[pos].second; i += steps[pos]) {
@@ -178,11 +183,14 @@ void Registration::optimizeGD() {
                 params[pos] = old[pos];
             }
             //optimizeGDHelper(old, best, cur_loss, 0);
-            if (tmp_loss == cur_loss) break;
+            if (tmp_loss == cur_loss) {
+                break;
+            }
             tmp_loss = cur_loss;
             params = best;
-            completeIteration();
+            completeIteration(iter % 50 == 0);
         }
+        completeIteration(true);
     }
 }
 
@@ -218,39 +226,47 @@ double Registration::getSimilarity(cv::Mat img1, cv::Mat img2, SimilarityType s)
 
 void Registration::applyTransform(bool original_image) {
     cv::Point2f src[3] = { cv::Point2f(0, 0), cv::Point2f(tar_img.cols, 0), cv::Point2f(0, tar_img.rows) };
+    cv::Point2f src_[3] = { cv::Point2f(0, 0), cv::Point2f(tar_ori_img.cols, 0), cv::Point2f(0, tar_ori_img.rows) };
     cv::Point2f dst[3];
-    cv::Point2f src_[4] = { cv::Point2f(0, 0), cv::Point2f(tar_img.cols, 0), cv::Point2f(0, tar_img.rows), cv::Point2f(tar_img.cols, tar_img.rows) };
-    cv::Point2f dst_[4];
+    cv::Point2f dst_[3];
+    cv::Point2f srcp[4] = { cv::Point2f(0, 0), cv::Point2f(tar_img.cols, 0), cv::Point2f(0, tar_img.rows), cv::Point2f(tar_img.cols, tar_img.rows) };
+    cv::Point2f srcp_[4] = { cv::Point2f(0, 0), cv::Point2f(tar_ori_img.cols, 0), cv::Point2f(0, tar_ori_img.rows), cv::Point2f(tar_ori_img.cols, tar_ori_img.rows) };
+    cv::Point2f dstp[4];
+    cv::Point2f dstp_[4];
 
     switch (transform_type) {
     case TRANSFORM_TRANSLATE:
         transform.at<float>(0, 2) = params[0];
         transform.at<float>(1, 2) = params[1];
+        transform_.at<float>(0, 2) = params[0] / SCALE;
+        transform_.at<float>(1, 2) = params[1] / SCALE;
         break;
     case TRANSFORM_ROTATE:
-        transform = cv::getRotationMatrix2D(cv::Point2f(0, 0), params[2], params[3]);
-        transform.at<float>(0, 2) = params[0];
-        transform.at<float>(1, 2) = params[1];
+        transform = cv::getRotationMatrix2D(cv::Point2f(params[0], params[1]), params[2], params[3]);
+        transform_ = cv::getRotationMatrix2D(cv::Point2f(params[0] / SCALE, params[1] / SCALE), params[2], params[3]);
         break;
     case TRANSFORM_AFFINE:        
         for (int i = 0; i < 6; i += 2) dst[i / 2] = cv::Point2f(params[i], params[i + 1]);
+        for (int i = 0; i < 6; i += 2) dst_[i / 2] = cv::Point2f(params[i] / SCALE, params[i + 1] / SCALE);
         transform = cv::getAffineTransform(src, dst);
-        //std::cout << transform.at<float>(0, 2) << std::endl;
+        transform_ = cv::getAffineTransform(src_, dst_);
         break;
     case TRANSFORM_PERSPECTIVE:
-        for (int i = 0; i < 8; i += 2) dst_[i / 2] = cv::Point2f(params[i], params[i + 1]);
-        transform = cv::getPerspectiveTransform(src_, dst_);
-        //std::cout << transform.at<float>(0, 2) << std::endl;
+        for (int i = 0; i < 8; i += 2) dstp[i / 2] = cv::Point2f(params[i], params[i + 1]);
+        for (int i = 0; i < 8; i += 2) dstp_[i / 2] = cv::Point2f(params[i] / SCALE, params[i + 1] / SCALE);
+        transform = cv::getPerspectiveTransform(srcp, dstp);
+        transform_ = cv::getPerspectiveTransform(srcp_, dstp_);
         break;
     }
     if (transform_type == TRANSFORM_PERSPECTIVE) {
-        cv::warpPerspective(ref_img, trans_img, transform, trans_img.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, border_value);
+        if (original_image) {
+            cv::warpPerspective(ref_ori_img, trans_ori_img, transform_, trans_ori_img.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, border_value);
+        } else {
+            cv::warpPerspective(ref_img, trans_img, transform, trans_img.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, border_value);
+        }        
     } else {
         if (original_image) {
-            cv::Mat t = transform.clone();
-            t.at<float>(0, 2) /= SCALE;
-            t.at<float>(1, 2) /= SCALE;
-            cv::warpAffine(ref_ori_img, trans_ori_img, t, trans_ori_img.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, border_value);
+            cv::warpAffine(ref_ori_img, trans_ori_img, transform_, trans_ori_img.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, border_value);
         } else {
             cv::warpAffine(ref_img, trans_img, transform, trans_img.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, border_value);
         }
@@ -258,14 +274,8 @@ void Registration::applyTransform(bool original_image) {
 }
 
 void Registration::showTransformedImage() {
-    applyTransform();
+    applyTransform(true);
     cv::Mat* img = new cv::Mat;
-    *img = trans_img.clone();
+    *img = trans_ori_img.clone();
     thread->showTransformedImage(img);
-    Sleep(50);
-    //applyTransform(true);
-    //cv::Mat* img = new cv::Mat;
-    //*img = trans_ori_img.clone();
-    //thread->showTransformedImage(img);
-    //Sleep(50);
 }

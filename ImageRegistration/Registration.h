@@ -31,7 +31,7 @@ public:
     void showTransformedImage();
     void runRegistration();
     void initialize();
-    void completeIteration();
+    void completeIteration(bool update = false);
     void optimizeNaive();
     void optimizeNaiveHelper(int pos);
     void optimizeGD();
@@ -46,6 +46,7 @@ public:
     cv::Mat tar_img; // target image
     cv::Mat trans_img; // transformed image
     cv::Mat transform; // warp matrix 2 * 3
+    cv::Mat transform_; // warp matrix 2 * 3
     cv::Scalar border_value; // average color of tar_img
     TransformType transform_type;
     SimilarityType similarity_type;
