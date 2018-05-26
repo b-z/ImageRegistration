@@ -29,6 +29,7 @@ public:
     cv::Mat ref_img;
     cv::Mat tar_img;
     ResultWindow* result_window;
+    RegistrationThread* r_thread;
 private:
     
 };

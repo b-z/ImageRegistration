@@ -13,7 +13,8 @@ Manager::Manager(QObject *parent, ResultWindow* r_window)
 
 Manager::~Manager()
 {
-
+    //r_thread->exit(0);
+    //delete r_thread;
 }
 
 cv::Mat Manager::loadImage() {
@@ -39,8 +40,8 @@ void Manager::loadTargetImage() {
 }
 
 void Manager::runRegistration(Registration::TransformType t, Registration::SimilarityType s, Registration::OptimizationType o) {
-    RegistrationThread* r = new RegistrationThread(this, ref_img, tar_img, t, s, o);
-    connect(r, SIGNAL(transformedImageReady(cv::Mat*)), result_window, SLOT(updateTransformedImage(cv::Mat*)));
-    connect(r, SIGNAL(newDataPoint(int, double, double)), result_window, SLOT(addDataPoint(int, double, double)));
-    r->start();
+    r_thread = new RegistrationThread(this, ref_img, tar_img, t, s, o);
+    connect(r_thread, SIGNAL(transformedImageReady(cv::Mat*)), result_window, SLOT(updateTransformedImage(cv::Mat*)));
+    connect(r_thread, SIGNAL(newDataPoint(int, double, double)), result_window, SLOT(addDataPoint(int, double, double)));
+    r_thread->start();
 }

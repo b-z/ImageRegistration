@@ -9,6 +9,7 @@ double random(double LO, double HI) {
 }
 
 Registration::Registration(RegistrationThread* thr, cv::Mat ref, cv::Mat tar, TransformType t, SimilarityType s, OptimizationType o) {
+    srand(time(0));
     thread = thr;
     ref_ori_img = ref;
     tar_ori_img = tar;
@@ -76,21 +77,41 @@ void Registration::initialize() {
         for (int i = 0; i < params.size(); i++) {
             params[i] = limits[i].first;
         }
-        steps[0] = 4;
-        steps[1] = 4;
-        steps[2] = 4;
-        steps[3] = 0.04;
+        steps[0] = 1;
+        steps[1] = 1;
+        steps[2] = 1;
+        steps[3] = 0.01;
         break;
     case TRANSFORM_AFFINE:
         params.resize(6);
         limits.resize(6);
         steps.resize(6);
-        limits[0] = std::make_pair(0, 30);// -c / 2, c / 2);
-        limits[1] = std::make_pair(-30, 0); // -r / 2, r / 2); // top left
-        limits[2] = std::make_pair(140, 160);// c / 2, c * 3 / 2);
-        limits[3] = std::make_pair(0, 30);// -r / 2, r / 2); // top right
-        limits[4] = std::make_pair(-30, 0);// -c / 2, c / 2);
-        limits[5] = std::make_pair(70, 90);// r / 2, r * 3 / 2); // bottom left
+        limits[0] = std::make_pair(-c / 2, c / 2);
+        limits[1] = std::make_pair(-r / 2, r / 2); // top left
+        limits[2] = std::make_pair(c / 2, c * 3 / 2);
+        limits[3] = std::make_pair(-r / 2, r / 2); // top right
+        limits[4] = std::make_pair(-c / 2, c / 2);
+        limits[5] = std::make_pair(r / 2, r * 3 / 2); // bottom left
+
+        for (int i = 0; i < params.size(); i++) {
+            params[i] = limits[i].first;
+        }
+        for (int i = 0; i < params.size(); i++) {
+            steps[i] = 1;
+        }
+        break;
+    case TRANSFORM_PERSPECTIVE:
+        params.resize(8);
+        limits.resize(8);
+        steps.resize(8);
+        limits[0] = std::make_pair(-c / 2, c / 2);
+        limits[1] = std::make_pair(-r / 2, r / 2); // top left
+        limits[2] = std::make_pair(c / 2, c * 3 / 2);
+        limits[3] = std::make_pair(-r / 2, r / 2); // top right
+        limits[4] = std::make_pair(-c / 2, c / 2);
+        limits[5] = std::make_pair(r / 2, r * 3 / 2); // bottom left
+        limits[6] = std::make_pair(c / 2, c * 3 / 2);
+        limits[7] = std::make_pair(r / 2, r * 3 / 2); // bottom right
 
         for (int i = 0; i < params.size(); i++) {
             params[i] = limits[i].first;
@@ -196,6 +217,11 @@ double Registration::getSimilarity(cv::Mat img1, cv::Mat img2, SimilarityType s)
 }
 
 void Registration::applyTransform(bool original_image) {
+    cv::Point2f src[3] = { cv::Point2f(0, 0), cv::Point2f(tar_img.cols, 0), cv::Point2f(0, tar_img.rows) };
+    cv::Point2f dst[3];
+    cv::Point2f src_[4] = { cv::Point2f(0, 0), cv::Point2f(tar_img.cols, 0), cv::Point2f(0, tar_img.rows), cv::Point2f(tar_img.cols, tar_img.rows) };
+    cv::Point2f dst_[4];
+
     switch (transform_type) {
     case TRANSFORM_TRANSLATE:
         transform.at<float>(0, 2) = params[0];
@@ -206,33 +232,40 @@ void Registration::applyTransform(bool original_image) {
         transform.at<float>(0, 2) = params[0];
         transform.at<float>(1, 2) = params[1];
         break;
-    case TRANSFORM_AFFINE:
-        cv::Point2f src[3] = { cv::Point2f(0, 0), cv::Point2f(tar_img.cols, 0), cv::Point2f(0, tar_img.rows) };
-        cv::Point2f dst[3];
+    case TRANSFORM_AFFINE:        
         for (int i = 0; i < 6; i += 2) dst[i / 2] = cv::Point2f(params[i], params[i + 1]);
         transform = cv::getAffineTransform(src, dst);
         //std::cout << transform.at<float>(0, 2) << std::endl;
         break;
+    case TRANSFORM_PERSPECTIVE:
+        for (int i = 0; i < 8; i += 2) dst_[i / 2] = cv::Point2f(params[i], params[i + 1]);
+        transform = cv::getPerspectiveTransform(src_, dst_);
+        //std::cout << transform.at<float>(0, 2) << std::endl;
+        break;
     }
-    if (original_image) {
-        cv::Mat t = transform.clone();
-        t.at<float>(0, 2) /= SCALE;
-        t.at<float>(1, 2) /= SCALE;
-        cv::warpAffine(ref_ori_img, trans_ori_img, t, trans_ori_img.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, border_value);
+    if (transform_type == TRANSFORM_PERSPECTIVE) {
+        cv::warpPerspective(ref_img, trans_img, transform, trans_img.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, border_value);
     } else {
-        cv::warpAffine(ref_img, trans_img, transform, trans_img.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, border_value);
+        if (original_image) {
+            cv::Mat t = transform.clone();
+            t.at<float>(0, 2) /= SCALE;
+            t.at<float>(1, 2) /= SCALE;
+            cv::warpAffine(ref_ori_img, trans_ori_img, t, trans_ori_img.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, border_value);
+        } else {
+            cv::warpAffine(ref_img, trans_img, transform, trans_img.size(), cv::INTER_LINEAR, cv::BORDER_CONSTANT, border_value);
+        }
     }
 }
 
 void Registration::showTransformedImage() {
-    //applyTransform();
-    //cv::Mat* img = new cv::Mat;
-    //*img = trans_img.clone();
-    //thread->showTransformedImage(img);
-    //Sleep(50);
-    applyTransform(true);
+    applyTransform();
     cv::Mat* img = new cv::Mat;
-    *img = trans_ori_img.clone();
+    *img = trans_img.clone();
     thread->showTransformedImage(img);
     Sleep(50);
+    //applyTransform(true);
+    //cv::Mat* img = new cv::Mat;
+    //*img = trans_ori_img.clone();
+    //thread->showTransformedImage(img);
+    //Sleep(50);
 }
