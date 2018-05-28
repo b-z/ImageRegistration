@@ -9,7 +9,7 @@ double random(double LO, double HI) {
 }
 
 Registration::Registration(RegistrationThread* thr, cv::Mat ref, cv::Mat tar, TransformType t, SimilarityType s, OptimizationType o) {
-    srand(clock());
+    srand(time(NULL));
     thread = thr;
     ref_ori_img = ref;
     tar_ori_img = tar;
@@ -155,7 +155,7 @@ void Registration::optimizeNaive() {
 
 void Registration::optimizeNaiveHelper(int pos) {
     if (pos >= params.size()) {
-        completeIteration(iter % 1000 == 0);
+        completeIteration(iter % 20 == 0);
         return;
     }
     for (float i = limits[pos].first; i <= limits[pos].second; i += steps[pos]) {
@@ -228,10 +228,11 @@ void Registration::optimizeSA() {
             double delta = fj - fi;
             if (random(0, 1) < exp(-delta / temp)) {
                 // jump to this neighbor
-                completeIteration(iter % 10 == 0);
+                completeIteration(iter % 20 == 0);
                 fi = fj;
             }
             else {
+                iter++;
                 params[r1] -= r2 * steps[r1];
             }
             temp *= r;
