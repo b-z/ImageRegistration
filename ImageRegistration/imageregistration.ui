@@ -38,7 +38,7 @@
           </property>
           <property name="minimumSize">
            <size>
-            <width>150</width>
+            <width>160</width>
             <height>0</height>
            </size>
           </property>
@@ -120,7 +120,7 @@
           </property>
           <property name="minimumSize">
            <size>
-            <width>150</width>
+            <width>160</width>
             <height>0</height>
            </size>
           </property>
@@ -189,7 +189,7 @@
           </property>
           <property name="minimumSize">
            <size>
-            <width>150</width>
+            <width>160</width>
             <height>0</height>
            </size>
           </property>
@@ -227,7 +227,7 @@
             </widget>
            </item>
            <item>
-            <widget class="QRadioButton" name="radio_ga">
+            <widget class="QRadioButton" name="radio_sa">
              <property name="minimumSize">
               <size>
                <width>0</width>
@@ -235,7 +235,7 @@
               </size>
              </property>
              <property name="text">
-              <string>Genetic Algorithm</string>
+              <string>Simulated Annealing</string>
              </property>
             </widget>
            </item>

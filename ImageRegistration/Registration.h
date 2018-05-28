@@ -21,7 +21,7 @@ public:
     enum OptimizationType {
         OPTIMIZE_NAIVE = 0,
         OPTIMIZE_GD = 1,
-        OPTIMIZE_GA = 2
+        OPTIMIZE_SA = 2
     };
     Registration(RegistrationThread* thr, cv::Mat ref, cv::Mat tar, TransformType t, SimilarityType s, OptimizationType o);
     ~Registration();
@@ -36,6 +36,7 @@ public:
     void optimizeNaiveHelper(int pos);
     void optimizeGD();
     void optimizeGDHelper(std::vector<float>& best, double& cur_loss);
+    void optimizeSA();
 public:
     int iter;
     double loss;

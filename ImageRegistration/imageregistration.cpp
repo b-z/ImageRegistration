@@ -69,6 +69,6 @@ void ImageRegistration::runRegistration() {
     if (ui.radio_linf->isChecked()) s = Registration::SimilarityType::SIMILARITY_LINF;
     Registration::OptimizationType o = Registration::OptimizationType::OPTIMIZE_NAIVE;
     if (ui.radio_gd->isChecked()) o = Registration::OptimizationType::OPTIMIZE_GD;
-    if (ui.radio_ga->isChecked()) o = Registration::OptimizationType::OPTIMIZE_GA;
+    if (ui.radio_sa->isChecked()) o = Registration::OptimizationType::OPTIMIZE_SA;
     manager->runRegistration(t, s, o);
 }

@@ -9,7 +9,7 @@ double random(double LO, double HI) {
 }
 
 Registration::Registration(RegistrationThread* thr, cv::Mat ref, cv::Mat tar, TransformType t, SimilarityType s, OptimizationType o) {
-    srand(time(0));
+    srand(clock());
     thread = thr;
     ref_ori_img = ref;
     tar_ori_img = tar;
@@ -40,6 +40,9 @@ void Registration::runRegistration() {
         break;
     case OPTIMIZE_GD:
         optimizeGD();
+        break;
+    case OPTIMIZE_SA:
+        optimizeSA();
         break;
     }
     std::cout << "finished!" << std::endl;
@@ -167,9 +170,9 @@ void Registration::optimizeGD() {
         double tmp_loss = 1e30;
         double cur_loss = 1e30;
 
-        for (int i = 0; i < params.size(); i++) {
+        for (int j = 0; j < params.size(); j++) {
             // give random start values
-            params[i] = random(limits[i].first, limits[i].second);
+            params[j] = random(limits[j].first, limits[j].second);
         }
 
         while (true) {
@@ -200,6 +203,42 @@ void Registration::optimizeGDHelper(std::vector<float>& best, double& cur_loss) 
     if (s < cur_loss) {
         cur_loss = s;
         best = params;
+    }
+}
+
+void Registration::optimizeSA() {
+    for (int i = 0; i < 10000; i++) {
+        for (int j = 0; j < params.size(); j++) {
+            // give random start values
+            params[j] = random(limits[j].first, limits[j].second);
+        }
+        applyTransform();
+        double fi = getSimilarity(trans_img, tar_img, similarity_type);
+        double temp = 10;
+        double r = 0.99;
+        int k = 1000;
+        while (k > 0) {
+            // select a random neighbor
+            int len = params.size();
+            int r1 = rand() % len;
+            double r2 = random(1, 10) * ((rand() % 2) * 2 - 1);
+            params[r1] += r2 * steps[r1];
+            applyTransform();
+            double fj = getSimilarity(trans_img, tar_img, similarity_type);
+            double delta = fj - fi;
+            if (random(0, 1) < exp(-delta / temp)) {
+                // jump to this neighbor
+                completeIteration(iter % 10 == 0);
+                fi = fj;
+            }
+            else {
+                params[r1] -= r2 * steps[r1];
+            }
+            temp *= r;
+            k--;
+        }
+        completeIteration(true);
+        thread->addDataPoint(iter + 1, 2, loss);
     }
 }
 
